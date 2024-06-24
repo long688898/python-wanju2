@@ -14,7 +14,7 @@ export NEZHA_PORT='443'
 export NEZHA_TLS='1'
 #=======================================
 # 下面设置UUID和路径，CF_IP是优选IP，SUB_NAME为节点名称
-export UUID='fd80f56e-93f3-4c85-b2a8-c77216c509a7'
+export UUID='fd80f56e-93f3-4c85-b2a8-c77216c369a7'
 export VPATH='vls' #vless路径
 export MPATH='vms' #vmess路径
 export CF_IP='ip.sb'
