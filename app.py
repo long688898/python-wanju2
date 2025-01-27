@@ -3,83 +3,44 @@ import subprocess
 import sys
 from multiprocessing import Process
 import socket
-import pkg_resources
 
-def install_requirements():
-    """安装所需的依赖包"""
+def install_flask():
+    """只安装Flask依赖"""
     try:
-        # 首先更新pip
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "pip"])
-        
-        # 安装wheel（这有助于安装预编译包）
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "wheel"])
-        
-        # 尝试使用预编译的wheel安装PyYAML
-        try:
-            subprocess.check_call([
-                sys.executable, 
-                "-m", 
-                "pip", 
-                "install", 
-                "PyYAML==6.0.1", 
-                "--only-binary", 
-                ":all:"
-            ])
-        except subprocess.CalledProcessError:
-            # 如果预编译安装失败，尝试安装开发工具并从源码构建
-            if os.name != 'nt':  # 如果不是Windows系统
-                subprocess.check_call(["apt-get", "update"])
-                subprocess.check_call([
-                    "apt-get", 
-                    "install", 
-                    "-y", 
-                    "python3-dev",
-                    "build-essential",
-                    "libyaml-dev"
-                ])
-            subprocess.check_call([
-                sys.executable, 
-                "-m", 
-                "pip", 
-                "install", 
-                "PyYAML==6.0.1"
-            ])
-        
-        # 安装Flask
         subprocess.check_call([
             sys.executable, 
             "-m", 
             "pip", 
             "install", 
+            "--no-cache-dir",  # 不使用缓存
             "Flask==2.3.2"
         ])
-        
     except subprocess.CalledProcessError as e:
-        print(f"Error installing dependencies: {e}")
+        print(f"Error installing Flask: {e}")
         sys.exit(1)
 
-def check_dependencies():
-    """检查必要的依赖是否已安装"""
-    required = {'Flask', 'PyYAML'}
-    installed = {pkg.key for pkg in pkg_resources.working_set}
-    missing = required - installed
-    
-    if missing:
-        print(f"Missing dependencies: {missing}")
+def is_flask_installed():
+    """检查Flask是否已安装"""
+    try:
+        import flask
+        return True
+    except ImportError:
         return False
-    return True
 
 def is_port_in_use(port):
+    """检查端口是否在使用中"""
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         return s.connect_ex(('localhost', port)) == 0
 
 def find_available_port(start_port):
+    """找到可用端口"""
     port = start_port
     while is_port_in_use(port):
         port += 1
     return port
 
 def start_server(port):
+    """启动Flask服务器"""
     try:
         from flask import Flask
         app = Flask(__name__)
@@ -94,7 +55,9 @@ def start_server(port):
         sys.exit(1)
 
 def execute_command(cmd):
+    """执行shell命令"""
     try:
+        # 区分操作系统
         if os.name == 'nt':  # Windows
             shell = True
         else:  # Unix-like
@@ -106,20 +69,23 @@ def execute_command(cmd):
             shell=shell,
             check=True,
             capture_output=True,
-            text=True
+            text=True,
+            env=os.environ.copy()  # 使用当前环境变量
         )
-        print(result.stdout)
+        if result.stdout:
+            print(result.stdout)
     except subprocess.CalledProcessError as e:
         print(f"Command execution failed: {e}")
-        print(f"Error output: {e.stderr}")
+        if e.stderr:
+            print(f"Error output: {e.stderr}")
     except Exception as e:
         print(f"An error occurred: {e}")
 
 if __name__ == "__main__":
-    # 检查并安装依赖
-    if not check_dependencies():
-        print("Installing missing dependencies...")
-        install_requirements()
+    # 检查并安装Flask
+    if not is_flask_installed():
+        print("Installing Flask...")
+        install_flask()
     
     # 设置默认端口
     initial_port = int(os.environ.get('SERVER_PORT', os.environ.get('PORT', 3001)))
@@ -130,21 +96,26 @@ if __name__ == "__main__":
     
     # 启动web服务器进程
     server_process = Process(target=start_server, args=(port,))
+    server_process.daemon = True  # 设置为守护进程
     server_process.start()
     
     try:
         # 执行命令
-        cmd = "curl --version && (chmod +x ./start.sh && ./start.sh)"
-        execute_command(cmd)
+        if os.path.exists('./start.sh'):
+            cmd = "chmod +x ./start.sh && ./start.sh"
+            execute_command(cmd)
+        else:
+            print("Warning: start.sh not found")
         
         # 等待服务器进程
         server_process.join()
     except KeyboardInterrupt:
         print("\nShutting down gracefully...")
-        server_process.terminate()
-        server_process.join()
     except Exception as e:
         print(f"Error: {e}")
-        server_process.terminate()
-        server_process.join()
-        sys.exit(1)
+    finally:
+        if server_process.is_alive():
+            server_process.terminate()
+            server_process.join(timeout=5)
+            if server_process.is_alive():
+                server_process.kill()
