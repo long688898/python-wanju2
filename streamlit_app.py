@@ -5,8 +5,8 @@ import time
 
 # streamlit专用python脚本
 # Load secrets from Streamlit and set them as environment variables
-nezha_server = st.secrets["nes"]
-nezha_key = st.secrets["nek"]
+nezha_server = st.secrets[" "]
+nezha_key = st.secrets[" "]
 tok = st.secrets["eyJhIjoiZWU4NWQ5YmQwNTI0OThhNmIwNWY0N2NjZmQ1YjM1MzIiLCJ0IjoiMDA1NDkxN2ItNDk4Zi00MWQwLWE0MjItNDM1MGRmZjgyYjc4IiwicyI6Ik1XSmlZbVk0WkdFdFlUVTBNUzAwWlRBeUxUazNOREF0WXpjNU5HWmlZVGRqTldNNSJ9"]
 dom = st.secrets["tong.ab66.filegear-sg.me"]
 # 在设置密钥里面添加nes,nek,tok,dom三四个参数即可
