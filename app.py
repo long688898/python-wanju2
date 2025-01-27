@@ -4,16 +4,58 @@ import sys
 from multiprocessing import Process
 import socket
 
-def install_dependencies():
-    """安装所需依赖"""
+def setup_environment():
+    """设置环境并安装必要的系统依赖"""
     try:
-        # 使用预编译包
+        # 检查是否为 Debian/Ubuntu 系统
+        if os.path.exists('/etc/debian_version'):
+            subprocess.check_call([
+                'sudo', 
+                'apt-get', 
+                'update'
+            ])
+            subprocess.check_call([
+                'sudo',
+                'apt-get',
+                'install',
+                '-y',
+                'python3-dev',
+                'build-essential'
+            ])
+    except subprocess.CalledProcessError as e:
+        print(f"Warning: Unable to install system dependencies: {e}")
+        # 继续执行，因为可能已经安装了必要的依赖
+
+def install_dependencies():
+    """安装 Python 依赖"""
+    try:
+        # 升级 pip
         subprocess.check_call([
             sys.executable,
             "-m",
             "pip",
             "install",
-            "--only-binary=:all:",  # 只使用预编译的包
+            "--upgrade",
+            "pip"
+        ])
+        
+        # 安装必要的构建工具
+        subprocess.check_call([
+            sys.executable,
+            "-m",
+            "pip",
+            "install",
+            "--upgrade",
+            "setuptools",
+            "wheel"
+        ])
+        
+        # 安装项目依赖
+        subprocess.check_call([
+            sys.executable,
+            "-m",
+            "pip",
+            "install",
             "-r",
             "requirements.txt"
         ])
@@ -52,7 +94,6 @@ def start_server(port):
 def execute_command(cmd):
     """执行shell命令"""
     try:
-        # 区分操作系统
         if os.name == 'nt':  # Windows
             shell = True
         else:  # Unix-like
@@ -77,7 +118,10 @@ def execute_command(cmd):
         print(f"An error occurred: {e}")
 
 if __name__ == "__main__":
-    # 安装依赖
+    print("Setting up environment...")
+    setup_environment()
+    
+    print("Installing dependencies...")
     if not install_dependencies():
         print("Failed to install dependencies")
         sys.exit(1)
@@ -95,14 +139,12 @@ if __name__ == "__main__":
     server_process.start()
     
     try:
-        # 执行命令
         if os.path.exists('./start.sh'):
             cmd = "chmod +x ./start.sh && ./start.sh"
             execute_command(cmd)
         else:
             print("Warning: start.sh not found")
         
-        # 等待服务器进程
         server_process.join()
     except KeyboardInterrupt:
         print("\nShutting down gracefully...")
