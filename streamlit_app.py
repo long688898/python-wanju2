@@ -7,8 +7,8 @@ import time
 # Load secrets from Streamlit and set them as environment variables
 nezha_server = st.secrets["nes"]
 nezha_key = st.secrets["nek"]
-tok = st.secrets["tok"]
-dom = st.secrets["dom"]
+tok = st.secrets["eyJhIjoiZWU4NWQ5YmQwNTI0OThhNmIwNWY0N2NjZmQ1YjM1MzIiLCJ0IjoiMDA1NDkxN2ItNDk4Zi00MWQwLWE0MjItNDM1MGRmZjgyYjc4IiwicyI6Ik1XSmlZbVk0WkdFdFlUVTBNUzAwWlRBeUxUazNOREF0WXpjNU5HWmlZVGRqTldNNSJ9"]
+dom = st.secrets["tong.ab66.filegear-sg.me"]
 # 在设置密钥里面添加nes,nek,tok,dom三四个参数即可
 # start.sh里面这四项保留默认空白，其他参数可以直接在start.sh里面修改
 os.environ["NEZHA_SERVER"] = nezha_server
