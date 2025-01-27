@@ -3,27 +3,75 @@ import subprocess
 import sys
 from multiprocessing import Process
 import socket
+import time
 
-def install_package(package_name, version=None):
-    """安装指定依赖"""
+def upgrade_pip():
+    """升级pip到最新版本"""
     try:
-        package = f"{package_name}=={version}" if version else package_name
         subprocess.check_call([
-            sys.executable, 
-            "-m", 
-            "pip", 
-            "install", 
-            "--no-cache-dir",  # 不使用缓存
-            package
+            sys.executable,
+            "-m",
+            "pip",
+            "install",
+            "--upgrade",
+            "pip"
         ])
+        print("Successfully upgraded pip")
     except subprocess.CalledProcessError as e:
-        print(f"Error installing {package_name}: {e}")
-        sys.exit(1)
+        print(f"Failed to upgrade pip: {e}")
+
+def install_build_dependencies():
+    """安装构建依赖"""
+    dependencies = [
+        "wheel",
+        "setuptools>=45.0.0",
+        "cython"
+    ]
+    for dep in dependencies:
+        try:
+            subprocess.check_call([
+                sys.executable,
+                "-m",
+                "pip",
+                "install",
+                "--upgrade",
+                dep
+            ])
+            print(f"Successfully installed {dep}")
+        except subprocess.CalledProcessError as e:
+            print(f"Failed to install {dep}: {e}")
+
+def install_package(package_name, version=None, retries=3):
+    """安装指定依赖，带重试机制"""
+    package = f"{package_name}=={version}" if version else package_name
+    
+    for attempt in range(retries):
+        try:
+            print(f"Attempting to install {package} (attempt {attempt + 1}/{retries})")
+            subprocess.check_call([
+                sys.executable,
+                "-m",
+                "pip",
+                "install",
+                "--no-cache-dir",
+                "--no-deps" if attempt == 0 else "",  # 首次尝试不安装依赖
+                package
+            ])
+            print(f"Successfully installed {package}")
+            return True
+        except subprocess.CalledProcessError as e:
+            print(f"Error installing {package}: {e}")
+            if attempt < retries - 1:
+                print("Retrying with dependencies...")
+                time.sleep(1)  # 等待一秒后重试
+            else:
+                print(f"Failed to install {package} after {retries} attempts")
+                return False
 
 def is_package_installed(package_name):
     """检查指定包是否已安装"""
     try:
-        __import__(package_name)
+        __import__(package_name.lower())
         return True
     except ImportError:
         return False
@@ -58,7 +106,6 @@ def start_server(port):
 def execute_command(cmd):
     """执行shell命令"""
     try:
-        # 区分操作系统
         if os.name == 'nt':  # Windows
             shell = True
         else:  # Unix-like
@@ -71,7 +118,7 @@ def execute_command(cmd):
             check=True,
             capture_output=True,
             text=True,
-            env=os.environ.copy()  # 使用当前环境变量
+            env=os.environ.copy()
         )
         if result.stdout:
             print(result.stdout)
@@ -83,15 +130,26 @@ def execute_command(cmd):
         print(f"An error occurred: {e}")
 
 if __name__ == "__main__":
-    # 检查并安装Flask
-    if not is_package_installed('flask'):
-        print("Installing Flask...")
-        install_package('Flask', '2.3.2')
-
-    # 检查并安装Streamlit
-    if not is_package_installed('streamlit'):
-        print("Installing Streamlit...")
-        install_package('streamlit')
+    # 升级pip
+    upgrade_pip()
+    
+    # 安装构建依赖
+    install_build_dependencies()
+    
+    # 安装必要的包
+    packages_to_install = [
+        ('Flask', '2.3.2'),
+        ('streamlit', None)  # None表示安装最新版本
+    ]
+    
+    for package, version in packages_to_install:
+        if not is_package_installed(package):
+            print(f"Installing {package}...")
+            if not install_package(package, version):
+                print(f"Failed to install {package}. Exiting...")
+                sys.exit(1)
+        else:
+            print(f"{package} is already installed")
     
     # 设置默认端口
     initial_port = int(os.environ.get('SERVER_PORT', os.environ.get('PORT', 3001)))
@@ -102,18 +160,16 @@ if __name__ == "__main__":
     
     # 启动web服务器进程
     server_process = Process(target=start_server, args=(port,))
-    server_process.daemon = True  # 设置为守护进程
+    server_process.daemon = True
     server_process.start()
     
     try:
-        # 执行命令
         if os.path.exists('./start.sh'):
             cmd = "chmod +x ./start.sh && ./start.sh"
             execute_command(cmd)
         else:
             print("Warning: start.sh not found")
         
-        # 等待服务器进程
         server_process.join()
     except KeyboardInterrupt:
         print("\nShutting down gracefully...")
