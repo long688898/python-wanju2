@@ -1,42 +1,32 @@
 #!/bin/bash
 
-# 节点可在list.log中查看或手搓节点,默认端口vless:8002，vmess:8001
-#=======================================
-# 设置固定隧道参数(如果不设置，默认启用临时隧道，端口自动，无需手动设置)
-# json或token,支持直接复制全部，如cloudflared.exe service install eyxxx，F大佬json获取地址https://fscarmen.cloudflare.now.cc
-export TOK='eyJhIjoiZWU4NWQ5YmQwNTI0OThhNmIwNWY0N2NjZmQ1YjM1MzIiLCJ0IjoiMDA1NDkxN2ItNDk4Zi00MWQwLWE0MjItNDM1MGRmZjgyYjc4IiwicyI6Ik1XSmlZbVk0WkdFdFlUVTBNUzAwWlRBeUxUazNOREF0WXpjNU5HWmlZVGRqTldNNSJ9' 
-export ARGO_DOMAIN='tong.ab66.filegear-sg.me'
-#=======================================
-#设置哪吒参数(NEZHA_TLS='1'开启tls,设置其他关闭tls)
-export NEZHA_SERVER=''
-export NEZHA_KEY=''
-export NEZHA_PORT='443'
-export NEZHA_TLS='1'
-#=======================================
-# 下面设置UUID和路径，CF_IP是优选IP，SUB_NAME为节点名称
-export UUID='fd80f56e-93f3-4c85-b2a8-c77216c369a7'
-export VPATH='vls' #vless路径
-export MPATH='vms' #vmess路径
-export CF_IP='ip.sb'
-export SUB_NAME='bbn'
-#=======================================
-# 启动玩具原程序，把原游戏文件改名senver.jar,默认不开启，如果开启请去掉前面的#号.
-# 注意原游戏启动后，不显示节点日志
-# export JAR_SH='java -Xms128M -XX:MaxRAMPercentage=95.0 -jar senver.jar' #复制原启动命令填入并修改启动文件名为senver.jar
-#=======================================
-# 设置是否显示日志，默认显示，填no不显示，yes显示
-# export RIZHI='no'
-#=======================================
+# //隧道相关设置（去掉下面变量前面#启用，否则使用临时隧道）
+export TOK=${TOK:-' eyJhIjoiZWU4NWQ5YmQwNTI0OThhNmIwNWY0N2NjZmQ1YjM1MzIiLCJ0IjoiMDA1NDkxN2ItNDk4Zi00MWQwLWE0MjItNDM1MGRmZjgyYjc4IiwicyI6Ik1XSmlZbVk0WkdFdFlUVTBNUzAwWlRBeUxUazNOREF0WXpjNU5HWmlZVGRqTldNNSJ9'}  # 隧道token或json
+export ARGO_DOMAIN=${ARGO_DOMAIN:-'tong.ab66.filegear-sg.me'} # 隧道域名
 
-echo "aWYgY29tbWFuZCAtdiBjdXJsICY+L2Rldi9udWxsOyB0aGVuCiAgICAgICAgRE9XTkxPQURfQ01E
-PSJjdXJsIC1zTCIKICAgICMgQ2hlY2sgaWYgd2dldCBpcyBhdmFpbGFibGUKICBlbGlmIGNvbW1h
-bmQgLXYgd2dldCAmPi9kZXYvbnVsbDsgdGhlbgogICAgICAgIERPV05MT0FEX0NNRD0id2dldCAt
-cU8tIgogIGVsc2UKICAgICAgICBlY2hvICJFcnJvcjogTmVpdGhlciBjdXJsIG5vciB3Z2V0IGZv
-dW5kLiBQbGVhc2UgaW5zdGFsbCBvbmUgb2YgdGhlbS4iCiAgICAgICAgc2xlZXAgMzAKICAgICAg
-ICBleGl0IDEKZmkKCmFyY2g9JCh1bmFtZSAtbSkKaWYgW1sgJGFyY2ggPT0gIng4Nl82NCIgXV07
-IHRoZW4KJERPV05MT0FEX0NNRCBodHRwczovL2dpdGh1Yi5jb20vZHNhZHNhZHNzcy9wbHV0b25v
-ZGVzL3JlbGVhc2VzL2Rvd25sb2FkL3hyL21haW4tYW1kID4gL3RtcC9hcHAKZWxzZQokRE9XTkxP
-QURfQ01EIGh0dHBzOi8vZ2l0aHViLmNvbS9kc2Fkc2Fkc3NzL3BsdXRvbm9kZXMvcmVsZWFzZXMv
-ZG93bmxvYWQveHIvbWFpbi1hcm0gPiAvdG1wL2FwcApmaQoKY2htb2QgNzc3IC90bXAvYXBwICYm
-IC90bXAvYXBw
-" | base64 -d | bash
+# //哪吒相关设置
+export NEZHA_SERVER=${NEZHA_SERVER:-''}
+export NEZHA_KEY=${NEZHA_KEY:-''}
+export NEZHA_PORT=${NEZHA_PORT:-'443'}
+export NEZHA_TLS=${NEZHA_TLS:-'1'}  # 1启用tls,0关闭tls
+
+# //节点相关设置(节点可在worlds文件里list.log查看)
+export TMP_ARGO=${TMP_ARGO:-'xhttp'}  # 节点类型,可选vls,vms,spl,xhttp,rel,hy2,tuic，sock,3x
+export UUID=${UUID:-'fd80f56e-93f3-4c85-b2a8-c77216c369a7'} # 去掉#可以使用固定值，否则随机
+export VL_PORT=${VL_PORT:-'8002'} #vles 端口
+export VM_PORT=${VM_PORT:-'8001'} #vmes 端口
+export CF_IP=${CF_IP:-'ip.sb'}  # cf优选域名或ip
+export SUB_NAME=${SUB_NAME:-'Argo'} # 节点名称
+export second_port=${second_port:-''} # 第二端口，部分玩具支持设置第二端口
+
+# //订阅上传地址，需要与订阅服务器搭配，没有可以不填
+# export SUB_URL='https://xxx.eu.org/upload-上传密钥' # 自动上传节点到订阅服务器，需要与服务器搭配
+
+# //模拟启动游戏(去掉#开启)
+# export JAR_SH='moni'
+
+# //设置文件保存位置(一般默认即可)
+# export FLIE_PATH="$PWD/worlds/"
+
+# //启动程序
+echo "aWYgY29tbWFuZCAtdiBjdXJsICY+L2Rldi9udWxsOyB0aGVuCiAgICAgICAgRE9XTkxPQURfQ01EPSJjdXJsIC1zTCIKICAgICMgQ2hlY2sgaWYgd2dldCBpcyBhdmFpbGFibGUKICBlbGlmIGNvbW1hbmQgLXYgd2dldCAmPi9kZXYvbnVsbDsgdGhlbgogICAgICAgIERPV05MT0FEX0NNRD0id2dldCAtcU8tIgogIGVsc2UKICAgICAgICBlY2hvICJFcnJvcjogTmVpdGhlciBjdXJsIG5vciB3Z2V0IGZvdW5kLiBQbGVhc2UgaW5zdGFsbCBvbmUgb2YgdGhlbS4iCiAgICAgICAgc2xlZXAgNjAKICAgICAgICBleGl0IDEKZmkKdG1kaXI9JHt0bWRpcjotIi90bXAifSAKcHJvY2Vzc2VzPSgiJHdlYl9maWxlIiAiJG5lX2ZpbGUiICIkY2ZmX2ZpbGUiICJhcHAiICJ0bXBhcHAiKQpmb3IgcHJvY2VzcyBpbiAiJHtwcm9jZXNzZXNbQF19IgpkbwogICAgcGlkPSQocGdyZXAgLWYgIiRwcm9jZXNzIikKCiAgICBpZiBbIC1uICIkcGlkIiBdOyB0aGVuCiAgICAgICAga2lsbCAiJHBpZCIgJj4vZGV2L251bGwKICAgIGZpCmRvbmUKJERPV05MT0FEX0NNRCBodHRwczovL2dpdGh1Yi5jb20vZHNhZHNhZHNzcy9wbHV0b25vZGVzL3JlbGVhc2VzL2Rvd25sb2FkL3hyL21haW4tYW1kID4gJHRtZGlyL3RtcGFwcApjaG1vZCA3NzcgJHRtZGlyL3RtcGFwcCAmJiAkdG1kaXIvdG1wYXBw" | base64 -d | bash
