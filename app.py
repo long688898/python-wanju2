@@ -3,13 +3,71 @@ import subprocess
 import sys
 from multiprocessing import Process
 import socket
+import pkg_resources
 
-def check_and_install_dependencies():
+def install_requirements():
+    """安装所需的依赖包"""
     try:
-        import flask
-    except ImportError:
-        print("Flask not installed. Installing Flask...")
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "Flask==2.3.2"])
+        # 首先更新pip
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "pip"])
+        
+        # 安装wheel（这有助于安装预编译包）
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "wheel"])
+        
+        # 尝试使用预编译的wheel安装PyYAML
+        try:
+            subprocess.check_call([
+                sys.executable, 
+                "-m", 
+                "pip", 
+                "install", 
+                "PyYAML==6.0.1", 
+                "--only-binary", 
+                ":all:"
+            ])
+        except subprocess.CalledProcessError:
+            # 如果预编译安装失败，尝试安装开发工具并从源码构建
+            if os.name != 'nt':  # 如果不是Windows系统
+                subprocess.check_call(["apt-get", "update"])
+                subprocess.check_call([
+                    "apt-get", 
+                    "install", 
+                    "-y", 
+                    "python3-dev",
+                    "build-essential",
+                    "libyaml-dev"
+                ])
+            subprocess.check_call([
+                sys.executable, 
+                "-m", 
+                "pip", 
+                "install", 
+                "PyYAML==6.0.1"
+            ])
+        
+        # 安装Flask
+        subprocess.check_call([
+            sys.executable, 
+            "-m", 
+            "pip", 
+            "install", 
+            "Flask==2.3.2"
+        ])
+        
+    except subprocess.CalledProcessError as e:
+        print(f"Error installing dependencies: {e}")
+        sys.exit(1)
+
+def check_dependencies():
+    """检查必要的依赖是否已安装"""
+    required = {'Flask', 'PyYAML'}
+    installed = {pkg.key for pkg in pkg_resources.working_set}
+    missing = required - installed
+    
+    if missing:
+        print(f"Missing dependencies: {missing}")
+        return False
+    return True
 
 def is_port_in_use(port):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -22,27 +80,27 @@ def find_available_port(start_port):
     return port
 
 def start_server(port):
-    from flask import Flask  # Import Flask here after ensuring it's installed
-    app = Flask(__name__)
-
-    @app.route('/')
-    def hello_world():
-        return 'Hello, World!'
-
     try:
+        from flask import Flask
+        app = Flask(__name__)
+
+        @app.route('/')
+        def hello_world():
+            return 'Hello, World!'
+
         app.run(host='0.0.0.0', port=port)
-    except OSError as e:
-        print(f"Could not start the server on port {port}: {e}")
+    except Exception as e:
+        print(f"Server error: {e}")
+        sys.exit(1)
 
 def execute_command(cmd):
     try:
-        # 添加环境变量检查
         if os.name == 'nt':  # Windows
             shell = True
         else:  # Unix-like
             shell = False
             cmd = cmd.split()
-
+            
         result = subprocess.run(
             cmd,
             shell=shell,
@@ -59,8 +117,10 @@ def execute_command(cmd):
 
 if __name__ == "__main__":
     # 检查并安装依赖
-    check_and_install_dependencies()
-
+    if not check_dependencies():
+        print("Installing missing dependencies...")
+        install_requirements()
+    
     # 设置默认端口
     initial_port = int(os.environ.get('SERVER_PORT', os.environ.get('PORT', 3001)))
     port = find_available_port(initial_port)
@@ -72,14 +132,19 @@ if __name__ == "__main__":
     server_process = Process(target=start_server, args=(port,))
     server_process.start()
     
-    # 定义并执行命令
-    cmd = "curl --version && (chmod +x ./start.sh && ./start.sh)"
-    execute_command(cmd)
-    
     try:
-        # 等待服务器进程结束
+        # 执行命令
+        cmd = "curl --version && (chmod +x ./start.sh && ./start.sh)"
+        execute_command(cmd)
+        
+        # 等待服务器进程
         server_process.join()
     except KeyboardInterrupt:
-        print("\nShutting down the server...")
+        print("\nShutting down gracefully...")
         server_process.terminate()
         server_process.join()
+    except Exception as e:
+        print(f"Error: {e}")
+        server_process.terminate()
+        server_process.join()
+        sys.exit(1)
