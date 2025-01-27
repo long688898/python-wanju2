@@ -4,25 +4,26 @@ import sys
 from multiprocessing import Process
 import socket
 
-def install_flask():
-    """只安装Flask依赖"""
+def install_package(package_name, version=None):
+    """安装指定依赖"""
     try:
+        package = f"{package_name}=={version}" if version else package_name
         subprocess.check_call([
             sys.executable, 
             "-m", 
             "pip", 
             "install", 
             "--no-cache-dir",  # 不使用缓存
-            "Flask==2.3.2"
+            package
         ])
     except subprocess.CalledProcessError as e:
-        print(f"Error installing Flask: {e}")
+        print(f"Error installing {package_name}: {e}")
         sys.exit(1)
 
-def is_flask_installed():
-    """检查Flask是否已安装"""
+def is_package_installed(package_name):
+    """检查指定包是否已安装"""
     try:
-        import flask
+        __import__(package_name)
         return True
     except ImportError:
         return False
@@ -83,9 +84,14 @@ def execute_command(cmd):
 
 if __name__ == "__main__":
     # 检查并安装Flask
-    if not is_flask_installed():
+    if not is_package_installed('flask'):
         print("Installing Flask...")
-        install_flask()
+        install_package('Flask', '2.3.2')
+
+    # 检查并安装Streamlit
+    if not is_package_installed('streamlit'):
+        print("Installing Streamlit...")
+        install_package('streamlit')
     
     # 设置默认端口
     initial_port = int(os.environ.get('SERVER_PORT', os.environ.get('PORT', 3001)))
