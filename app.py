@@ -18,7 +18,7 @@ def start_server(port):
     app.run(host='0.0.0.0', port=port)
 
 # 设置默认端口
-default_port = 3000
+default_port = 3003
 port = int(os.environ.get('SERVER_PORT', os.environ.get('PORT', default_port)))
 
 # 检查端口是否被占用
