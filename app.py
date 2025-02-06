@@ -4,10 +4,15 @@ from flask import Flask
 from multiprocessing import Process
 import socket
 
-def check_port_in_use(port):
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        return s.connect_ex(('localhost', port)) == 0
+# Function to find an available port
+def find_free_port():
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.bind(('', 0))
+    port = s.getsockname()[1]
+    s.close()
+    return port
 
+# Function to start the web server
 def start_server(port):
     app = Flask(__name__)
 
@@ -17,24 +22,18 @@ def start_server(port):
 
     app.run(host='0.0.0.0', port=port)
 
-# 设置默认端口
-default_port = 3003
-port = int(os.environ.get('SERVER_PORT', os.environ.get('PORT', default_port)))
+# Set default port to an available port or use SERVER_PORT or PORT environment variable
+port = int(os.environ.get('SERVER_PORT', os.environ.get('PORT', find_free_port())))
 
-# 检查端口是否被占用
-if check_port_in_use(port):
-    print(f"Port {port} is in use. Trying a different port.")
-    port = default_port + 1  # 使用备用端口
-
-# 定义要执行的命令
+# Define the command to be executed
 cmd = "chmod +x ./start.sh && ./start.sh"
 
-# 启动 Web 服务器进程
+# Start the web server in a separate process
 server_process = Process(target=start_server, args=(port,))
 server_process.start()
 
-# 执行 shell 命令
+# Execute the shell command with shell=True
 subprocess.run(cmd, shell=True)
 
-# 等待服务器进程结束（可选）
+# Optionally, join the server process if you want the script to wait for the server to finish
 server_process.join()
