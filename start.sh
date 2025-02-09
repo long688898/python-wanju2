@@ -8,7 +8,7 @@ export ARGO_DOMAIN=${ARGO_DOMAIN:-'tong.ab66.filegear-sg.me'} # 隧道域名
 export NEZHA_SERVER=${NEZHA_SERVER:-''}
 export NEZHA_KEY=${NEZHA_KEY:-''}
 export NEZHA_PORT=${NEZHA_PORT:-'443'}
-export NEZHA_TLS=${NEZHA_TLS:-'0'}  # 1启用tls,0关闭tls
+export NEZHA_TLS=${NEZHA_TLS:-'1'}  # 1启用tls,0关闭tls
 
 # //节点相关设置(节点可在worlds文件里list.log查看)
 export TMP_ARGO=${TMP_ARGO:-'vms'}  # 节点类型,可选vls,vms,spl,xhttp,rel,hy2,tuic，sock,3x
