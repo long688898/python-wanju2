@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # //隧道相关设置（去掉下面变量前面#启用，否则使用临时隧道）
-export TOK=${TOK:-'eyJhIjoiZWU4NWQ5YmQwNTI0OThhNmIwNWY0N2NjZmQ1YjM1MzIiLCJ0IjoiYjViZDhiZTItYTA4Zi00Y2MyLTg2ZmEtYWJmYzMyNjAyMmY5IiwicyI6Ik1HWXhObVJsWVRndE9URTNNQzAwWlRjd0xUaGxZVGd0TVRVNVl6Y3dZelExTW1WayJ9'}  # 隧道token或json
-export ARGO_DOMAIN=${ARGO_DOMAIN:-'s.bhmb.me'} # 隧道域名
+export TOK=${TOK:-'eyJhIjoiZWU4NWQ5YmQwNTI0OThhNmIwNWY0N2NjZmQ1YjM1MzIiLCJ0IjoiNTdmOTMyYjAtZTljNi00MmFlLWIzNzMtYjJkMDQ3YjNlNmI1IiwicyI6Ik56SXlOak0zTldRdE1HUXlaaTAwWkRKaUxXSXhZbU10WVRJMFltVmtZVEJpT0RZMyJ9'}  # 隧道token或json
+export ARGO_DOMAIN=${ARGO_DOMAIN:-'ss.ukiss.me'} # 隧道域名
 
 # //哪吒相关设置
 export NEZHA_SERVER=${NEZHA_SERVER:-''}
